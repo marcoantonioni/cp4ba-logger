@@ -7,7 +7,7 @@
 # Description:
 #   This script demonstrates an advanced logging system for bash scripts with
 #   the following features:
-#   - Enable/disable logging via LOGGING_ENABLED variable (true/false)
+#   - Enable/disable logging via CP4BA_LOGGING_ENABLED variable (true/false)
 #   - Multiple log levels: DEBUG, INFO, WARNING, ERROR
 #   - Colored console output with ANSI color codes
 #   - Optional file output with configurable path
@@ -33,28 +33,28 @@
 
 # Master switch to enable/disable all logging
 # Set to "true" to enable logging, "false" to disable
-export LOGGING_ENABLED=false
+export CP4BA_LOGGING_ENABLED=false
 
 # Minimum log level to display/record
 # Options: DEBUG, INFO, WARNING, ERROR
 # Only messages at this level or higher will be logged
-export LOG_LEVEL="INFO"
+export CP4BA_LOG_LEVEL="INFO"
 
 # Enable/disable console output
-export LOG_TO_CONSOLE=true
+export CP4BA_LOG_TO_CONSOLE=true
 
 # Enable/disable file output
-export LOG_TO_FILE=false
+export CP4BA_LOG_TO_FILE=false
 
 # Log file path (will be created if it doesn't exist)
-# export LOG_FILE="./application.log"
-export LOG_FILE=""
+# export CP4BA_LOG_FILE="./application.log"
+export CP4BA_LOG_FILE=""
 
 # Maximum log file size in bytes before rotation (default: 10MB)
-export LOG_MAX_SIZE=$((10 * 1024 * 1024))
+export CP4BA_LOG_MAX_SIZE=$((10 * 1024 * 1024))
 
 # Number of rotated log files to keep
-export LOG_BACKUP_COUNT=5
+export CP4BA_LOG_BACKUP_COUNT=5
 
 # ANSI Color codes for console output
 readonly COLOR_RESET='\033[0m'
@@ -68,15 +68,16 @@ readonly COLOR_BOLD='\033[1m'
 # HELPER FUNCTIONS
 ################################################################################
 
-# Function: get_log_level_priority
+# Function: get_CP4BA_LOG_LEVEL_priority
 # Description: Returns numeric priority for log level comparison
 # Parameters: $1 - Log level (DEBUG, INFO, WARNING, ERROR)
 # Returns: Numeric priority (0-3)
-get_log_level_priority() {
+get_CP4BA_LOG_LEVEL_priority() {
     local level="$1"
     case "$level" in
         DEBUG)   echo 0 ;;
         INFO)    echo 1 ;;
+        ONLYMSG) echo 1 ;;
         WARNING) echo 2 ;;
         ERROR)   echo 3 ;;
         *)       echo 0 ;;
@@ -92,6 +93,7 @@ get_log_color() {
     case "$level" in
         DEBUG)   echo -e "$COLOR_DEBUG" ;;
         INFO)    echo -e "$COLOR_INFO" ;;
+        ONLYMSG) echo -e "$COLOR_INFO" ;;
         WARNING) echo -e "$COLOR_WARNING" ;;
         ERROR)   echo -e "$COLOR_ERROR" ;;
         *)       echo -e "$COLOR_RESET" ;;
@@ -124,28 +126,28 @@ get_caller_info() {
 
 # Function: rotate_log
 # Description: Rotates log files when size limit is exceeded
-# Parameters: None (uses global LOG_FILE and LOG_BACKUP_COUNT)
+# Parameters: None (uses global CP4BA_LOG_FILE and CP4BA_LOG_BACKUP_COUNT)
 rotate_log() {
-    if [[ ! -f "$LOG_FILE" ]]; then
+    if [[ ! -f "$CP4BA_LOG_FILE" ]]; then
         return 0
     fi
     
     local file_size
-    file_size=$(stat -f%z "$LOG_FILE" 2>/dev/null || stat -c%s "$LOG_FILE" 2>/dev/null)
+    file_size=$(stat -f%z "$CP4BA_LOG_FILE" 2>/dev/null || stat -c%s "$CP4BA_LOG_FILE" 2>/dev/null)
     
-    if [[ $file_size -ge $LOG_MAX_SIZE ]]; then
+    if [[ $file_size -ge $CP4BA_LOG_MAX_SIZE ]]; then
         # Rotate existing backup files
-        for ((i=$LOG_BACKUP_COUNT-1; i>=1; i--)); do
-            if [[ -f "${LOG_FILE}.${i}" ]]; then
-                mv "${LOG_FILE}.${i}" "${LOG_FILE}.$((i+1))"
+        for ((i=$CP4BA_LOG_BACKUP_COUNT-1; i>=1; i--)); do
+            if [[ -f "${CP4BA_LOG_FILE}.${i}" ]]; then
+                mv "${CP4BA_LOG_FILE}.${i}" "${CP4BA_LOG_FILE}.$((i+1))"
             fi
         done
         
         # Move current log to .1
-        mv "$LOG_FILE" "${LOG_FILE}.1"
+        mv "$CP4BA_LOG_FILE" "${CP4BA_LOG_FILE}.1"
         
         # Create new empty log file
-        touch "$LOG_FILE"
+        touch "$CP4BA_LOG_FILE"
     fi
 }
 
@@ -161,7 +163,7 @@ rotate_log() {
 # Returns: 0 on success, 1 if logging is disabled
 log() {
     # Check if logging is enabled
-    if [[ "$LOGGING_ENABLED" != "true" ]]; then
+    if [[ "$CP4BA_LOGGING_ENABLED" != "true" ]]; then
         return 1
     fi
     
@@ -177,8 +179,8 @@ log() {
     # Check if message level meets minimum threshold
     local level_priority
     local min_priority
-    level_priority=$(get_log_level_priority "$level")
-    min_priority=$(get_log_level_priority "$LOG_LEVEL")
+    level_priority=$(get_CP4BA_LOG_LEVEL_priority "$level")
+    min_priority=$(get_CP4BA_LOG_LEVEL_priority "$CP4BA_LOG_LEVEL")
 
     if [[ $level_priority -lt $min_priority ]]; then
         return 0
@@ -196,13 +198,13 @@ log() {
     
     if [[ "$level" = "ONLYMSG" ]]; then
         # Format: MESSAGE
-        log_entry="NEWLOGGER) ${message}"
+        log_entry="${message}"
     else
         # Format: [TIMESTAMP] [LEVEL] [CALLER] MESSAGE
         log_entry="[${timestamp}] [${level}] [${caller_info}] ${message}"
     fi
     # Output to console with color
-    if [[ "$LOG_TO_CONSOLE" == "true" ]]; then
+    if [[ "$CP4BA_LOG_TO_CONSOLE" == "true" ]]; then
         if [[ "$level" = "ONLYMSG" ]]; then
             echo -e "${log_entry}"
         else
@@ -211,17 +213,17 @@ log() {
     fi
     
     # Output to file (without color codes)
-    if [[ ! -z "$LOG_TO_FILE" && "$LOG_TO_FILE" == "true" ]]; then
+    if [[ ! -z "$CP4BA_LOG_TO_FILE" && "$CP4BA_LOG_TO_FILE" == "true" ]]; then
         # Ensure log directory exists
         local log_dir
-        log_dir=$(dirname "$LOG_FILE")
+        log_dir=$(dirname "$CP4BA_LOG_FILE")
         mkdir -p "$log_dir" 2>/dev/null
         
         # Check if rotation is needed
         rotate_log
         
         # Append to log file
-        echo "$log_entry" >> "$LOG_FILE"
+        echo "$log_entry" >> "$CP4BA_LOG_FILE"
     fi
     
     return 0
