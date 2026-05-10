@@ -33,28 +33,28 @@
 
 # Master switch to enable/disable all logging
 # Set to "true" to enable logging, "false" to disable
-export CP4BA_LOGGING_ENABLED=false
+#export CP4BA_LOGGING_ENABLED=false
 
 # Minimum log level to display/record
 # Options: DEBUG, INFO, WARNING, ERROR
 # Only messages at this level or higher will be logged
-export CP4BA_LOG_LEVEL="INFO"
+#export CP4BA_LOG_LEVEL="INFO"
 
 # Enable/disable console output
-export CP4BA_LOG_TO_CONSOLE=true
+#export CP4BA_LOG_TO_CONSOLE=true
 
 # Enable/disable file output
-export CP4BA_LOG_TO_FILE=false
+#export CP4BA_LOG_TO_FILE=false
 
 # Log file path (will be created if it doesn't exist)
 # export CP4BA_LOG_FILE="./application.log"
-export CP4BA_LOG_FILE=""
+#export CP4BA_LOG_FILE=""
 
 # Maximum log file size in bytes before rotation (default: 10MB)
-export CP4BA_LOG_MAX_SIZE=$((10 * 1024 * 1024))
+#export CP4BA_LOG_MAX_SIZE=$((10 * 1024 * 1024))
 
 # Number of rotated log files to keep
-export CP4BA_LOG_BACKUP_COUNT=5
+#export CP4BA_LOG_BACKUP_COUNT=5
 
 # ANSI Color codes for console output
 readonly COLOR_RESET='\033[0m'
