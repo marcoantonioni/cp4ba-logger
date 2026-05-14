@@ -48,7 +48,8 @@
 
 # Log file path (will be created if it doesn't exist)
 # export CP4BA_LOG_FILE="./application.log"
-#export CP4BA_LOG_FILE=""
+# export CP4BA_LOG_FILE="/tmp/cp4ba-logs/application-"$(date "+%Y-%m-%d-%H_%M_%S")".log"
+# export CP4BA_LOG_FILE=""
 
 # Maximum log file size in bytes before rotation (default: 10MB)
 #export CP4BA_LOG_MAX_SIZE=$((10 * 1024 * 1024))
@@ -192,8 +193,7 @@ log() {
     local color
     local log_entry
     
-    timestamp=$(get_timestamp)
-    caller_info=$(get_caller_info)
+    timestamp=$(get_timestamp)    
     color=$(get_log_color "$level")
     
     if [[ "$level" = "ONLYMSG" ]]; then
@@ -201,7 +201,9 @@ log() {
         log_entry="${message}"
     else
         # Format: [TIMESTAMP] [LEVEL] [CALLER] MESSAGE
-        log_entry="[${timestamp}] [${level}] [${caller_info}] ${message}"
+        # caller_info=$(get_caller_info)
+        # log_entry="[${timestamp}] [${level}] [${caller_info}] ${message}"
+        log_entry="[${timestamp}] [${level}] ${message}"
     fi
     # Output to console with color
     if [[ "$CP4BA_LOG_TO_CONSOLE" == "true" ]]; then
@@ -220,10 +222,10 @@ log() {
         mkdir -p "$log_dir" 2>/dev/null
         
         # Check if rotation is needed
-        rotate_log
+        # rotate_log
         
         # Append to log file
-        echo "$log_entry" >> "$CP4BA_LOG_FILE"
+        echo "$log_entry" | sed -r "s/\\\033\[([0-9]{1,3}(;[0-9]{1,2};?)?)?[mGK]//g" >> "$CP4BA_LOG_FILE"
     fi
     
     return 0
